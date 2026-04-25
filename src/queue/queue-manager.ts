@@ -17,6 +17,7 @@ import {
   ReplayJobResult,
 } from './types';
 import { jobProcessors } from './processors';
+import { RetryPolicyManager } from './retry-manager';
 
 /**
  * Queue health information - safe for admin exposure
@@ -48,8 +49,11 @@ export class QueueManager {
   private workers: Map<JobType, Worker> = new Map();
   private queueEvents: Map<JobType, QueueEvents> = new Map();
   private isShuttingDown = false;
+  private retryManager: RetryPolicyManager;
 
-  private constructor() {}
+  private constructor() {
+    this.retryManager = RetryPolicyManager.getInstance();
+  }
 
   /**
    * Get singleton instance of QueueManager
@@ -73,9 +77,10 @@ export class QueueManager {
       return;
     }
 
+    const jobOptions = this.retryManager.getJobOptions(jobType);
     const queue = new Queue(jobType, {
       connection: queueConfig.redis,
-      defaultJobOptions: queueConfig.defaultJobOptions,
+      defaultJobOptions: jobOptions,
     });
 
     queue.on('error', (error: Error) => {
@@ -295,6 +300,15 @@ export class QueueManager {
     queueEvents.on('error', (error: Error) => {
       console.error(`[${jobType}] QueueEvents error:`, error.message);
     });
+  }
+
+  /**
+   * Get access to the retry policy manager for configuration
+   * 
+   * @returns RetryPolicyManager instance
+   */
+  public getRetryManager(): RetryPolicyManager {
+    return this.retryManager;
   }
 
   /**
