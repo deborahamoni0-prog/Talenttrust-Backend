@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from '../../middleware/auth';
 import { contractMetadataService } from './contractMetadata.service';
 import { CreateContractMetadataRequest, UpdateContractMetadataRequest } from './contractMetadata.types';
 import { parsePaginationQuery } from '../../utils/pagination';
+import { buildEtag, isIfNoneMatchSatisfied } from '../../utils/etag';
 
 /**
  * Controller layer for contract metadata operations
@@ -80,6 +81,13 @@ export class ContractMetadataController {
         req.user
       );
 
+      const etag = buildEtag(`contract-metadata:list:${contractId}`, result);
+      res.setHeader('ETag', etag);
+      if (isIfNoneMatchSatisfied(req.headers?.['if-none-match'], etag)) {
+        res.status(304).end();
+        return;
+      }
+
       res.json(result);
     } catch {
       res.status(500).json({ error: 'Internal server error' });
@@ -104,6 +112,13 @@ export class ContractMetadataController {
 
       if (!result) {
         res.status(404).json({ error: 'Metadata not found' });
+        return;
+      }
+
+      const etag = buildEtag(`contract-metadata:item:${id}`, result);
+      res.setHeader('ETag', etag);
+      if (isIfNoneMatchSatisfied(req.headers?.['if-none-match'], etag)) {
+        res.status(304).end();
         return;
       }
 
