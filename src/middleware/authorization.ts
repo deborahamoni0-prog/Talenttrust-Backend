@@ -43,7 +43,9 @@ import type { Action, User, Resource, Role, AuthenticatedRequest } from "../lib/
 
 // ─── JWT configuration ────────────────────────────────────────────────────────
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "";
+// Read lazily at call time so test suites can set process.env.JWT_SECRET before
+// making requests without module-load-order issues.
+const getJwtSecret = () => process.env.JWT_SECRET ?? "";
 
 /**
  * Shape of the decoded JWT payload expected by this platform.
@@ -101,7 +103,7 @@ export function requireAuth(
 
   try {
     // jwt.verify throws for any invalid token (bad signature, expired, etc.)
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
 
     // Guard required claims — a well-formed token always carries these.
     if (!decoded.sub || !decoded.email) {
@@ -237,6 +239,12 @@ export function requirePermission(
       });
 
       if (!result.granted) {
+        console.log('isAuthorized denied:', JSON.stringify(result), 'Inputs:', JSON.stringify({
+          user: req.user,
+          resource,
+          action,
+          resourceOwnerId,
+        }));
         forbidden(res, "You do not have permission to perform this action.");
         return;
       }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { registry } from '../../../docs/openapi-registry';
 import { MAX_MILESTONES_PER_CONTRACT, milestoneSchema } from '../../../contracts/bounds';
 
 // Base contract schema for common fields
@@ -28,13 +29,14 @@ export const createContractSchema = z.object({
 // Update contract schema with partial fields for PATCH
 export const updateContractSchema = z.object({
   body: z.object({
+    version: z.number().int().min(0),
     title: z.string().min(5).max(100).optional(),
     description: z.string().min(10).max(1000).optional(),
     freelancerId: z.string().uuid().nullable().optional(),
     clientId: z.string().uuid().optional(),
     budget: z.number().positive().max(1000000).optional(),
     deadline: z.string().datetime().nullable().optional(),
-    status: z.enum(['PENDING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'DISPUTED']).optional(),
+    status: z.enum(['PENDING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'DISPUTED', 'draft', 'active', 'completed', 'disputed', 'cancelled']).optional(),
     terms: z.string().nullable().optional(),
     milestones: z.array(z.object({
       title: z.string().min(1).max(100),
@@ -68,13 +70,5 @@ export const contractQuerySchema = z.object({
 registry.register('CreateContract', createContractSchema.shape.body);
 
 export type CreateContractDto = z.infer<typeof createContractSchema>['body'];
-
-export const updateContractSchema = z.object({
-  body: z.object({
-    version: z.number().int().min(0),
-    title: z.string().min(5).max(100).optional(),
-    status: z.enum(['draft', 'active', 'completed', 'disputed', 'cancelled']).optional(),
-  }),
-});
 
 export type UpdateContractDto = z.infer<typeof updateContractSchema>['body'];

@@ -2,8 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { ContractsService } from '../services/contracts.service';
 import { ContractRepository } from '../repositories/contractRepository';
 import { getDb } from '../db/database';
-import { CreateContractDto } from '../modules/contracts/dto/contract.dto';
+import { CreateContractDto, UpdateContractDto } from '../modules/contracts/dto/contract.dto';
 import { CONTRACT_BOUNDS, ContractBoundsError } from '../contracts/bounds';
+import { parsePaginationQuery, applyPagination } from '../utils/pagination';
 
 const contractsService = new ContractsService(new ContractRepository(getDb()));
 
@@ -34,7 +35,7 @@ export class ContractsController {
    *
    * Returns 400 if page or limit are invalid (non-integer, negative, or out of range).
    */
-  public static async getContracts(_req: Request, res: Response, next: NextFunction) {
+  public static async getContracts(req: Request, res: Response, next: NextFunction) {
     try {
       const pagination = parsePaginationQuery((req.query ?? {}) as Record<string, unknown>);
       if (!pagination.ok) {
@@ -89,9 +90,9 @@ export class ContractsController {
   public static async createContract(req: Request, res: Response, next: NextFunction) {
     try {
       const data: CreateContractDto = req.body;
-      const newContract: ContractResponse = await contractsService.createContract(data);
+      const newContract = await contractsService.createContract(data);
       
-      const response: ApiResponse<ContractResponse> = {
+      const response: ApiResponse<any> = {
         status: 'success',
         data: newContract,
         message: 'Contract created successfully',
@@ -109,12 +110,12 @@ export class ContractsController {
    */
   public static async updateContract(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as ContractIdParams;
+      const { id } = req.params;
       const updateData: UpdateContractDto = req.body;
       
-      const updatedContract: ContractResponse = await contractsService.updateContract(id, updateData);
+      const updatedContract = await contractsService.updateContract(id, updateData);
       
-      const response: ApiResponse<ContractResponse> = {
+      const response: ApiResponse<any> = {
         status: 'success',
         data: updatedContract,
         message: 'Contract updated successfully',
@@ -132,7 +133,7 @@ export class ContractsController {
    */
   public static async deleteContract(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params as ContractIdParams;
+      const { id } = req.params;
       await contractsService.deleteContract(id);
       
       const response: ApiResponse = {
