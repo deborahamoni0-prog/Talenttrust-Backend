@@ -16,6 +16,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import { healthRouter } from './routes/health';
 import contractsModuleRouter from './routes/contracts.routes';
 import reputationRouter from './routes/reputation.routes';
+import configRouter from './routes/config.routes';
 import { requestIdMiddleware } from './middleware/requestId';
 
 /**
@@ -32,6 +33,7 @@ export function createApp(): express.Application {
 
   // ── Routes ────────────────────────────────────────────────────────────────
   app.use('/health', healthRouter);
+  app.use('/api/config', configRouter);
   app.use('/api/v1/contracts', contractsModuleRouter);
   app.use('/api/v1/reputation', reputationRouter);
 

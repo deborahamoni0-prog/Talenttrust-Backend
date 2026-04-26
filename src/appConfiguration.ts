@@ -8,6 +8,7 @@ export interface AppConfig {
   chaosMode: ChaosMode;
   chaosTargets: string[];
   chaosProbability: number;
+  allowedAssets: string[];
 }
 
 const MAX_TIMEOUT_MS = 10_000;
@@ -53,6 +54,17 @@ function parseTargets(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function parseAssets(value: string | undefined): string[] {
+  if (!value) {
+    return ['USDC', 'XLM', 'BTC', 'ETH']; // Default assets
+  }
+
+  return value
+    .split(',')
+    .map((item) => item.trim().toUpperCase())
+    .filter(Boolean);
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const port = clamp(toNumber(env.PORT, 3001), 1, 65535);
   const upstreamTimeoutMs = clamp(toNumber(env.UPSTREAM_TIMEOUT_MS, 1200), MIN_TIMEOUT_MS, MAX_TIMEOUT_MS);
@@ -66,5 +78,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     chaosMode: parseChaosMode(env.CHAOS_MODE),
     chaosTargets: parseTargets(env.CHAOS_TARGETS),
     chaosProbability,
+    allowedAssets: parseAssets(env.ALLOWED_ASSETS),
   };
 }
