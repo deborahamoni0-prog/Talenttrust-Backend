@@ -18,6 +18,7 @@ import { healthRouter } from './routes/health';
 import contractsModuleRouter from './routes/contracts.routes';
 
 import reputationRouter from './routes/reputation.routes';
+import configRouter from './routes/config.routes';
 import dependencyScanRouter from './routes/dependency-scan.routes';
 import { requestIdMiddleware } from './middleware/requestId';
 import { applySecurityMiddleware } from './middleware/security';
@@ -59,6 +60,7 @@ export function createApp(options: AppFactoryOptions = {}): express.Application 
 
   // ── Routes ────────────────────────────────────────────────────────────────
   app.use('/health', healthRouter);
+  app.use('/api/config', configRouter);
   app.use('/api/v1/contracts', contractsModuleRouter);
   app.use('/api/v1/reputation', reputationRouter);
   app.use('/api/v1/dependency-scan', dependencyScanRouter);
