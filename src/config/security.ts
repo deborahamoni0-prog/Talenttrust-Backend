@@ -20,6 +20,11 @@ function validateCorsAllowlist(origins: string[]): void {
         throw new Error('Wildcard CORS origin (*) is not allowed in production mode');
     }
     
+    // Check for localhost in production
+    if (isProduction && origins.some(origin => origin.includes('localhost'))) {
+        throw new Error('Localhost CORS origin is not allowed in production mode');
+    }
+    
     // Check for empty allowlist
     if (origins.length === 0) {
         throw new Error('CORS allowlist cannot be empty');

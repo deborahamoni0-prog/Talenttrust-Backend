@@ -12,6 +12,9 @@
  */
 
 import express from 'express';
+import { applySecurityMiddleware } from './middleware/security';
+import { MetricsService } from './observability';
+import { rateLimitStore } from './config/rateLimit';
 import { healthRouter } from './routes/health';
 import contractsModuleRouter from './routes/contracts.routes';
 import reputationRouter from './routes/reputation.routes';
@@ -25,16 +28,10 @@ interface AppFactoryOptions {
 
 export function attachTerminalHandlers(app: express.Application): void {
   // ── 404 handler ──────────────────────────────────────────────────────────
-  app.use((_req: Request, res: Response) => {
-    res.status(404).json({ error: 'Not Found' });
-  });
+  app.use(notFoundHandler);
 
   // ── Global error handler ─────────────────────────────────────────────────
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Internal Server Error' });
-  });
+  app.use(errorHandler);
 }
 
 /**
