@@ -7,6 +7,7 @@ jest.mock('../services/contracts.service');
 jest.mock('../services/soroban.service');
 
 import { ContractsService } from '../services/contracts.service';
+import { NotFoundError } from '../errors/appError';
 
 describe('Contracts Routes Integration Tests', () => {
   let app: express.Application;
@@ -138,10 +139,10 @@ describe('Contracts Routes Integration Tests', () => {
         .expect(404);
 
       expect(response.body).toEqual({
-        status: 'error',
         error: {
           code: 'not_found',
-          message: 'Not found'
+          message: 'The requested resource was not found',
+          requestId: expect.any(String),
         },
       });
     });
@@ -279,11 +280,19 @@ describe('Contracts Routes Integration Tests', () => {
     });
 
     it('should handle service errors when contract not found', async () => {
-      jest.spyOn(ContractsService.prototype, 'deleteContract').mockRejectedValue(new Error('Contract not found'));
+      jest.spyOn(ContractsService.prototype, 'deleteContract').mockRejectedValue(new NotFoundError('Contract not found'));
 
-      await request(app)
+      const response = await request(app)
         .delete('/api/v1/contracts/550e8400-e29b-41d4-a716-446655440000')
-        .expect(500);
+        .expect(404);
+
+      expect(response.body).toEqual({
+        error: {
+          code: 'not_found',
+          message: 'Contract not found',
+          requestId: expect.any(String),
+        },
+      });
     });
   });
 });

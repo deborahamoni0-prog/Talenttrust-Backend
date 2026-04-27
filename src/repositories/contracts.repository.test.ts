@@ -78,7 +78,7 @@ describe('ContractsRepository', () => {
 
     it('should return null when contract not found', async () => {
       const result = await repository.findById('non-existent-id');
-      expect(result).toBeNull();
+      expect(result).toBeUndefined();
     });
   });
 
@@ -259,13 +259,12 @@ describe('ContractsRepository', () => {
       await repository.delete(created.id);
 
       const found = await repository.findById(created.id);
-      expect(found).toBeNull();
+      expect(found).toBeUndefined();
     });
 
-    it('should throw error when deleting non-existent contract', async () => {
-      await expect(repository.delete('non-existent-id')).rejects.toThrow(
-        'Contract with id non-existent-id not found'
-      );
+    it('should return false when deleting non-existent contract', async () => {
+      const result = await repository.delete('non-existent-id');
+      expect(result).toBe(false);
     });
   });
 

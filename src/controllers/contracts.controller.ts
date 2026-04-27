@@ -4,6 +4,7 @@ import { ContractRepository } from '../repositories/contractRepository';
 import { getDb } from '../db/database';
 import { CreateContractDto, UpdateContractDto } from '../modules/contracts/dto/contract.dto';
 import { CONTRACT_BOUNDS, ContractBoundsError } from '../contracts/bounds';
+import { NotFoundError } from '../errors/appError';
 import { parsePaginationQuery, applyPagination } from '../utils/pagination';
 
 const contractsService = new ContractsService(new ContractRepository(getDb()));
@@ -72,8 +73,7 @@ export class ContractsController {
     try {
       const contract = await contractsService.getContractById(req.params.id!);
       if (!contract) {
-        res.status(404).json({ status: 'error', error: { code: 'not_found', message: 'Not found' } });
-        return;
+        throw new NotFoundError('The requested resource was not found');
       }
       res.status(200).json({ status: 'success', data: contract });
     } catch (error) {

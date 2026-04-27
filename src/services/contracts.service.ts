@@ -4,6 +4,7 @@ import { ContractRepository } from '../repositories/contractRepository';
 import { SorobanService } from './soroban.service';
 import { validateContractBounds, ContractBoundsError } from '../contracts/bounds';
 import { MAX_MILESTONES_PER_CONTRACT, MAX_CONTRACT_AMOUNT_STROOPS } from '../contracts/bounds';
+import { NotFoundError } from '../errors/appError';
 
 /**
  * @dev Service layer for managing Freelancer Escrow Contracts.
@@ -85,7 +86,7 @@ export class ContractsService {
   public async deleteContract(id: string): Promise<void> {
     const deleted = this.contractRepository.delete(id);
     if (!deleted) {
-      throw new Error(`Contract with id ${id} not found`);
+      throw new NotFoundError(`Contract with id ${id} not found`);
     }
   }
 

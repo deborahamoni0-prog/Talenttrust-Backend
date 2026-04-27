@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { registry } from '../../../docs/openapi-registry';
+import { MAX_CONTRACT_AMOUNT_STROOPS } from '../../../contracts/bounds';
 
 // Base contract schema for common fields
 const contractBaseSchema = {
@@ -7,7 +8,7 @@ const contractBaseSchema = {
   description: z.string().min(10).max(1000),
   freelancerId: z.string().uuid().optional(),
   clientId: z.string().uuid(),
-  budget: z.number().positive().max(1000000),
+  budget: z.number().positive().max(MAX_CONTRACT_AMOUNT_STROOPS),
   deadline: z.string().datetime().optional(),
   status: z.enum(['draft', 'active', 'completed', 'cancelled', 'disputed']).optional(),
   terms: z.string().optional(),
@@ -33,7 +34,7 @@ export const updateContractSchema = z.object({
     description: z.string().min(10).max(1000).optional(),
     freelancerId: z.string().uuid().nullable().optional(),
     clientId: z.string().uuid().optional(),
-    budget: z.number().positive().max(1000000).optional(),
+    budget: z.number().positive().max(MAX_CONTRACT_AMOUNT_STROOPS).optional(),
     deadline: z.string().datetime().nullable().optional(),
     status: z.enum(['draft', 'active', 'completed', 'cancelled', 'disputed']).optional(),
     terms: z.string().nullable().optional(),

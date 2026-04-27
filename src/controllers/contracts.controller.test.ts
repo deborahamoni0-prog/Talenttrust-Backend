@@ -85,6 +85,35 @@ describe('ContractsController', () => {
     });
   });
 
+  describe('getContractById', () => {
+    it('returns 200 with contract data', async () => {
+      const contract = { id: 'abc', title: 'Test' };
+      mockGetContractById.mockResolvedValue(contract);
+      mockRequest.params = { id: 'abc' };
+      await ContractsController.getContractById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext,
+      );
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith({ status: 'success', data: contract });
+    });
+
+    it('delegates to next() for NotFoundError when contract missing', async () => {
+      mockGetContractById.mockResolvedValue(null);
+      mockRequest.params = { id: 'missing' };
+      await ContractsController.getContractById(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext,
+      );
+      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+      const error = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(error.name).toBe('AppError');
+      expect(error.statusCode).toBe(404);
+    });
+  });
+
   describe('createContract', () => {
     it('returns 201 on success', async () => {
       const contract = { id: 'abc', status: 'PENDING' };
