@@ -3,9 +3,13 @@ import { ReputationController } from '../controllers/reputation.controller';
 import { registry } from '../docs/openapi-registry';
 import { updateReputationSchema } from '../modules/reputation/dto/reputation.dto';
 import { validateSchema } from '../middleware/validate.middleware';
+import { requireAuth, requirePermission } from '../middleware/authorization';
 import { z } from 'zod';
 
 const router = Router();
+
+// ── Authentication guard — all reputation routes require a valid JWT ──────────
+router.use(requireAuth);
 
 registry.registerPath({
   method: 'get',
@@ -45,7 +49,8 @@ registry.registerPath({
 });
 
 // GET /api/v1/reputation/:id - Retrieve reputation for a freelancer
-router.get('/:id', ReputationController.getProfile);
+// All authenticated roles (admin, client, freelancer) may read reviews.
+router.get('/:id', requirePermission('reviews', 'read'), ReputationController.getProfile);
 
 registry.registerPath({
   method: 'put',
@@ -85,11 +90,14 @@ registry.registerPath({
   }
 });
 
-// PUT /api/v1/reputation/:id - Update reputation for a freelancer (add review)
+// PUT /api/v1/reputation/:id - Submit a reputation review for a freelancer.
+// Requires 'reviews.create' permission — granted to admin, client, freelancer.
 router.put(
-  '/:id', 
+  '/:id',
+  requirePermission('reviews', 'create'),
   validateSchema(z.object({ body: updateReputationSchema, params: z.object({ id: z.string().min(1) }) })),
   ReputationController.updateProfile
 );
 
 export default router;
+

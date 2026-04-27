@@ -1,4 +1,31 @@
-import { Request, Response, NextFunction } from 'express';
+/**
+ * @module auth
+ * @description JWT authentication middleware for TalentTrust.
+ *
+ * This module re-exports the canonical JWT-based middleware from
+ * `./authorization` as the authoritative authentication layer.
+ *
+ * Token verification uses HS256 with `JWT_SECRET` from the environment.
+ * Demo tokens are no longer accepted in any environment.
+ *
+ * Expected JWT payload:
+ * ```json
+ * {
+ *   "sub":   "<userId>",
+ *   "email": "<userEmail>",
+ *   "role":  "admin" | "client" | "freelancer",
+ *   "iat":   <issuedAt>,
+ *   "exp":   <expiresAt>
+ * }
+ * ```
+ *
+ * On success `req.user` is set to `{ id, email, role }`.
+ * On failure the middleware responds with HTTP 401.
+ */
+
+// Re-export the canonical types and middleware so existing callers that
+// import from './auth' continue to work without changes.
+import { requirePermission } from './authorization';
 import { database } from '../database';
 
 export interface AuthenticatedRequest extends Request {
@@ -78,6 +105,8 @@ export const requireContractAccess = async (req: AuthenticatedRequest, res: Resp
     });
   }
 
+// Specialized RBAC guard used by contract metadata routes
+export const requireContractAccess = requirePermission('contracts', 'update', async (req) => {
   const contractId = req.params.contractId;
   if (!contractId) {
     const requestId = typeof res.locals.requestId === 'string' ? res.locals.requestId : 'unknown';
