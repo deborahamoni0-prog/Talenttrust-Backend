@@ -98,6 +98,10 @@ export class ContractsController {
       
       res.status(201).json(response);
     } catch (error) {
+      if (error instanceof ContractBoundsError) {
+        res.status(422).json({ status: 'error', message: error.message });
+        return;
+      }
       next(error);
     }
   }
@@ -121,6 +125,10 @@ export class ContractsController {
       
       res.status(200).json(response);
     } catch (error) {
+      if (error instanceof ContractBoundsError) {
+        res.status(422).json({ status: 'error', message: error.message });
+        return;
+      }
       next(error);
     }
   }
