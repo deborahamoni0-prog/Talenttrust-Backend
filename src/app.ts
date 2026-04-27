@@ -12,17 +12,31 @@
  */
 
 import express from 'express';
-import { healthRouter } from './routes/health';
-import contractsModuleRouter from './routes/contracts.routes';
-import reputationRouter from './routes/reputation.routes';
-import dependencyScanRouter from './routes/dependency-scan.routes';
-import { requestIdMiddleware } from './middleware/requestId';
 import { notFoundHandler, errorHandler } from './middleware/errorHandlers';
-import { MetricsService } from './observability/metrics-service';
-import { RateLimitStore } from './lib/rateLimitStore';
+import { healthRouter } from './routes/health';
 
-// Module-level store instance for shutdown handler
-let rateLimitStore: RateLimitStore;
+import contractsModuleRouter from './routes/contracts.routes';
+
+import reputationRouter from './routes/reputation.routes';
+import configRouter from './routes/config.routes';
+import dependencyScanRouter from './routes/dependency-scan.routes';
+import { adminRouter } from './routes/admin.routes';
+import { requestIdMiddleware } from './middleware/requestId';
+import { applySecurityMiddleware } from './middleware/security';
+import { MetricsService } from './observability/metrics-service';
+import { rateLimitStore } from './config/rateLimit';
+
+interface AppFactoryOptions {
+  includeTerminalHandlers?: boolean;
+}
+
+export function attachTerminalHandlers(app: express.Application): void {
+  // ── 404 handler ──────────────────────────────────────────────────────────
+  app.use(notFoundHandler);
+
+  // ── Global error handler ─────────────────────────────────────────────────
+  app.use(errorHandler);
+}
 
 /**
  * Creates and configures the Express application.
@@ -48,9 +62,11 @@ export function createApp(): express.Application {
 
   // ── Routes ────────────────────────────────────────────────────────────────
   app.use('/health', healthRouter);
+  app.use('/api/config', configRouter);
   app.use('/api/v1/contracts', contractsModuleRouter);
   app.use('/api/v1/reputation', reputationRouter);
   app.use('/api/v1/dependency-scan', dependencyScanRouter);
+  app.use('/api/v1/admin', adminRouter);
 
   // ── 404 handler ──────────────────────────────────────────────────────────
   app.use(notFoundHandler);
