@@ -2,7 +2,7 @@
  * @title Security Middleware Integration Tests
  * @notice Tests for CORS and Helmet middleware application
  */
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import request from 'supertest';
 import { applySecurityMiddleware } from './security';
 
@@ -56,6 +56,16 @@ describe('Security Middleware Integration', () => {
             expect(response.status).not.toBe(200);
         });
 
+        // Error handler to catch CORS errors and return 403 instead of 500
+        beforeEach(() => {
+            app.use((err: any, _req: Request, res: Response, _next: express.NextFunction) => {
+                if (err.message === 'Not allowed by CORS policy') {
+                    res.status(403).json({ error: 'CORS policy violation' });
+                } else {
+                    res.status(500).json({ error: 'Internal Server Error' });
+                }
+            });
+        });
 
         it('should handle preflight OPTIONS requests', async () => {
             process.env.ALLOWED_ORIGINS = 'https://example.com';

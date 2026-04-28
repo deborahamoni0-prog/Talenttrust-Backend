@@ -12,6 +12,9 @@
  */
 
 import express from 'express';
+import { applySecurityMiddleware } from './middleware/security';
+import { MetricsService } from './observability';
+import { rateLimitStore } from './config/rateLimit';
 import { notFoundHandler, errorHandler } from './middleware/errorHandlers';
 import { healthRouter } from './routes/health';
 
