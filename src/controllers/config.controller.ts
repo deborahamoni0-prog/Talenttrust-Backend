@@ -10,9 +10,9 @@ export class ConfigController {
    */
   static getConfig(req: Request, res: Response) {
     try {
-      const config = loadConfig();
+      const config = loadConfig() as unknown as Record<string, unknown>;
       return res.json({
-        allowedAssets: config.allowedAssets,
+        allowedAssets: config['allowedAssets'] ?? [],
       });
     } catch (error) {
       console.error('Failed to load config:', error);

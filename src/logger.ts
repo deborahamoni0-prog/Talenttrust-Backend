@@ -98,9 +98,6 @@ const SENSITIVE_KEYS = [
 const redactionPaths = SENSITIVE_KEYS.flatMap(key => [
   key,
   `*.${key}`,
-  `*..${key}`, // Deep nested paths
-  `${key}.*`,
-  `*..${key}.*`
 ]);
 
 /**

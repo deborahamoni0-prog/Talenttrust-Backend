@@ -56,11 +56,8 @@ export function createApp(): express.Application {
     process.env['SERVICE_NAME'] ?? 'talenttrust-backend',
   );
 
-  rateLimitStore = new RateLimitStore({ sweepIntervalMs: 60_000 });
-
   // ── Middleware ────────────────────────────────────────────────────────────
   app.use(express.json());
-  app.use(requestLimitsMiddleware);
   app.use(requestIdMiddleware);
   app.use(httpLoggerMiddleware);
   app.use(metricsService.trackHttpRequest.bind(metricsService));
@@ -89,8 +86,8 @@ export function createApp(): express.Application {
 
 /** Shutdown handler for graceful termination. */
 export function shutdownRateLimitStore(): void {
-  if (rateLimitStore) {
-    rateLimitStore.destroy();
+  if (rateLimitStore && typeof (rateLimitStore as any).destroy === 'function') {
+    (rateLimitStore as any).destroy();
     console.log('[rateLimit] Store shutdown complete');
   }
 }

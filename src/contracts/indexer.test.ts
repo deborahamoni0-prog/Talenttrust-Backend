@@ -159,7 +159,7 @@ describe('ContractEventIndexer', () => {
       const result = await indexer.indexBatch('source-1', events);
 
       expect(result.processedCount).toBe(2);
-      expect(result.errors).toContain(jasmine.stringMatching(/validation|required/i));
+      expect(result.errors.some((e: string) => /validation|required/i.test(e))).toBe(true);
 
       const indexed = await indexer.getIndexedEvents();
       expect(indexed).toHaveLength(2);

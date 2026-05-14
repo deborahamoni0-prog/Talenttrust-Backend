@@ -5,8 +5,6 @@ import { updateReputationSchema } from '../modules/reputation/dto/reputation.dto
 import { validateSchema } from '../middleware/validate.middleware';
 import { requireAuth, requirePermission } from '../middleware/authorization';
 import { z } from 'zod';
-import { authenticateMiddleware } from '../auth/authenticate';
-import { requirePermission } from '../auth/middleware';
 
 const router = Router();
 
@@ -109,7 +107,7 @@ router.put(
   '/:id',
   requirePermission('reviews', 'create'),
   validateSchema(z.object({ body: updateReputationSchema, params: z.object({ id: z.string().min(1) }) })),
-  ReputationController.updateProfile
+  ReputationController.createRating
 );
 
 export default router;

@@ -52,6 +52,7 @@
   },
   "overrides": {
     "uuid": "^14.0.0",
+    "fast-uri": "^3.1.2",
     "autocannon": {
       "uuid": "^9.0.0"
     },

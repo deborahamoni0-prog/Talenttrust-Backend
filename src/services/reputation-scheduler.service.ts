@@ -121,7 +121,7 @@ export class ReputationSchedulerService {
    */
   public async scheduleRecomputeJob(): Promise<string | null> {
     try {
-      const jobId = await this.queueManager.addJob(
+      const result = await this.queueManager.addJob(
         JobType.REPUTATION_RECOMPUTE,
         {
           batchSize: this.config.batchSize,
@@ -129,6 +129,7 @@ export class ReputationSchedulerService {
           resumeFromCheckpoint: this.config.resumeFromCheckpoint,
         }
       );
+      const jobId = (result as any).jobId ?? String(result);
 
       logger.info(`Scheduled reputation recompute job: ${jobId}`, {
         batchSize: this.config.batchSize,
@@ -208,15 +209,16 @@ export class ReputationSchedulerService {
     resumeFromCheckpoint?: boolean;
   } = {}): Promise<string | null> {
     logger.info('Manually triggering reputation recompute job', options);
-    
-    return this.queueManager.addJob(
+
+    const result = await this.queueManager.addJob(
       JobType.REPUTATION_RECOMPUTE,
       {
         batchSize: options.batchSize || this.config.batchSize,
-        forceRecompute: options.forceRecompute ?? true, // Default to true for manual triggers
+        forceRecompute: options.forceRecompute ?? true,
         resumeFromCheckpoint: options.resumeFromCheckpoint ?? this.config.resumeFromCheckpoint,
       }
     );
+    return (result as any).jobId ?? String(result);
   }
 }
 
