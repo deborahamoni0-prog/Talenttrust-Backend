@@ -132,16 +132,25 @@ async function countPurgeCandidates(
   candidates.push({ table: STORAGE_TABLE_MAP[ArchivalStorageType.LOCAL], count: localCount });
 
   // Check archive storage for post-archival expired data
+  // Track unique items across all archive types to avoid double-counting
+  // since COLD_STORAGE and ENCRYPTED_ARCHIVE share the same provider
   const archiveTypes = [ArchivalStorageType.COLD_STORAGE, ArchivalStorageType.ENCRYPTED_ARCHIVE];
+  const seenArchiveIds = new Set<string>();
+  
   for (const storageType of archiveTypes) {
     const provider = storageManager.getProvider(storageType);
     const archivedData = await provider.list();
     let archiveCount = 0;
     for (const data of archivedData) {
+      // Skip items already counted from another archive type (same provider)
+      if (seenArchiveIds.has(data.id)) {
+        continue;
+      }
       if (data.isArchived && data.archivedAt) {
         const archivalAge = now - data.archivedAt.getTime();
         if (archivalAge > postArchivalMs) {
           archiveCount++;
+          seenArchiveIds.add(data.id);
         }
       }
     }
@@ -216,14 +225,23 @@ export async function executePurge(
     }
 
     // Delete post-archival expired data from archive storage
+    // Track unique items across all archive types to avoid double-deleting
+    // since COLD_STORAGE and ENCRYPTED_ARCHIVE share the same provider
     const archiveTypes = [ArchivalStorageType.COLD_STORAGE, ArchivalStorageType.ENCRYPTED_ARCHIVE];
+    const seenArchiveIds = new Set<string>();
+    
     for (const storageType of archiveTypes) {
       const provider = storageManager.getProvider(storageType);
       const archivedData = await provider.list();
       for (const data of archivedData) {
+        // Skip items already processed from another archive type (same provider)
+        if (seenArchiveIds.has(data.id)) {
+          continue;
+        }
         if (data.isArchived && data.archivedAt) {
           const archivalAge = now - data.archivedAt.getTime();
           if (archivalAge > postArchivalMs) {
+            seenArchiveIds.add(data.id);
             try {
               const success = await storageManager.delete(data.id, storageType);
               if (success) {
